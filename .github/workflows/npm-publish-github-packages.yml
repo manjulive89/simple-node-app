@@ -10,14 +10,30 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # Updated to the latest version
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'  # Use '20' if you prefer Node.js 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the project (if necessary)
+        run: npm run build  # Run this command if your project needs a build step
+
+      - name: Start the application
+        run: node index.js
+        env:
+          CUSTOM_ENV_VARIABLE: ${{ secrets.CUSTOM_ENV_VARIABLE }}  # Set any required environment variables here
 
       - name: Deploy NodeJS app via SSH
-        uses: appleboy/ssh-action@v0.1.4  # Assuming a newer version exists; please verify this
+        uses: appleboy/ssh-action@v0.1.2  # Ensure this version is compatible with Node.js 22
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             mkdir -p deploy/test
             cd deploy/test
@@ -30,7 +46,5 @@ jobs:
               cd simple-node-app
             fi
 
-            npm install
-            npm run build  # Only if your project requires a build step
-
+            # The deployment script assumes npm install and build are handled here if needed
             pm2 restart app || pm2 start npm --name "app" -- run start
