@@ -9,15 +9,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy NodeJS app
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Deploy NodeJS app via SSH
         uses: appleboy/ssh-action@v0.1.2
         with:
-          host: ${{secrets.SSH_HOST}}  # IP address of the server you wish to ssh into
-          key: ${{secrets.SSH_KEY}}  # Private or public key of the server
+          host: ${{ secrets.SSH_HOST }}  # IP address of the server you wish to ssh into
           username: ${{ secrets.SSH_USERNAME }}  # User of the server you want to ssh into
+          key: ${{ secrets.SSH_PRIVATE_KEY }}  # Private key of the server, stored as a GitHub secret
+          script: |
+            # Ensure the deployment directory exists and navigate into it
+            mkdir -p deploy/test
+            cd deploy/test
 
-        script: |
-          mkdir test
-          cd test
-          git clone git@github.com:manjulive89/simple-node-app.git
-          echo 'Deployment successful to Azure VM'
+            # If the repository is already cloned, pull changes; otherwise, clone the repository
+            if [ -d simple-node-app/.git ]; then
+              cd simple-node-app
+              git pull
+            else
+              git clone git@github.com:manjulive89/simple-node-app.git
+              cd simple-node-app
+            fi
+
+            # Install dependencies and build the project (if necessary)
+            npm install
+            npm run build  # Run this command if your project needs a build step
+
+            # Restart the Node.js application (update this command according to your setup)
+            pm2 restart app || pm2 start npm --name "app" -- run start
