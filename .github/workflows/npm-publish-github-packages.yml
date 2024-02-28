@@ -23,11 +23,6 @@ jobs:
       - name: Build the project (if necessary)
         run: npm run build  # Run this command if your project needs a build step
 
-      - name: Start the application
-        run: node index.js
-        env:
-          CUSTOM_ENV_VARIABLE: ${{ secrets.CUSTOM_ENV_VARIABLE }}  # Set any required environment variables here
-
       - name: Deploy NodeJS app via SSH
         uses: appleboy/ssh-action@v0.1.2  # Ensure this version is compatible with Node.js 22
         with:
